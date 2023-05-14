@@ -1,8 +1,16 @@
 import os
+import yaml
 import re
+import logging
+import argparse
 
 
-def is_excluded(path, git_ignore_patterns=[]):
+# Set up a logger for this script
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+def is_excluded(path):
     file_name = os.path.basename(path)
 
     # Exclude names that are just long strings of incoherent text or numbers
@@ -18,43 +26,67 @@ def is_excluded(path, git_ignore_patterns=[]):
 
     if "\\.venv\\" in path:
         return True
-
-    # Exclude files/directories matching .gitignore patterns
-    for pattern in git_ignore_patterns:
-        # Convert wildcard character to regex equivalent
-        regex_pattern = re.escape(pattern).replace("\\*", ".*")
-        if re.match(regex_pattern, file_name):
-            return True
+    if "\\.git\\" in path:
+        return True
 
     return False
 
 
-def process_file(path, indent=""):
-    if not is_excluded(path):
-        # It's a valid file, so print its name
-        print(f"{indent}{os.path.basename(path)}")
+def print_and_save_tree(args=None):
+    logger.info("Running print_and_save_tree()")
+    path = os.getcwd()
+    logger.info(f"Current working directory: {path}")
+    tree = create_tree(path)
 
-
-def process_directory(path, indent=""):
-    if not is_excluded(path):
-        # It's a valid directory, so print its name
-        print(f"{indent}{os.path.basename(path)}/")
-
-        # Then recursively print its children
-        next_indent = f"  {indent}"
-        for item in os.scandir(path):
-            if item.is_file():
-                process_file(item.path, next_indent)
-            elif item.is_dir():
-                process_directory(item.path, next_indent)
-
-
-def print_tree(path=os.getcwd(), indent=""):
-    if os.path.isdir(path):
-        process_directory(path, indent)
+    if args and args.yaml:
+        logger.info("In if args and args.yaml:")
+        save_tree_to_yaml(tree)
     else:
-        process_file(path, indent)
+        print_tree(tree)
 
 
-# Call the function for the current directory
-print_tree()
+def save_tree_to_yaml(tree):
+    logger.info("Attempting to save yaml file...")
+    try:
+        # Specify the full path of the output file
+        output_path = os.path.join(
+            os.getcwd(), "codebase_craft", "templates", "snapshots", "tree.yaml"
+        )
+        with open(output_path, "w") as file:
+            yaml.dump(tree, file)
+        logger.info("Yaml file saved successfully.")
+    except Exception as e:
+        logger.error("Failed to save yaml file.", exc_info=True)
+
+
+def print_tree(tree, indent=""):
+    for key, value in tree.items():
+        print(f"{indent}{key}")
+        if isinstance(value, dict):
+            print_tree(value, indent + "  ")
+
+
+def create_tree(path, tree=None):
+    if tree is None:
+        tree = {}
+
+    for item in os.scandir(path):
+        if item.is_file() and not is_excluded(item.path):
+            tree[item.name] = None
+        elif item.is_dir() and not is_excluded(item.path):
+            tree[item.name] = create_tree(item.path, {})
+
+    return tree
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Print and possibly save the project tree."
+    )
+    parser.add_argument("--yaml", help="Save tree to a yaml file", action="store_true")
+    args = parser.parse_args()
+    print_and_save_tree(args)
+
+
+if __name__ == "__main__":
+    main()
