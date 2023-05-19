@@ -1,70 +1,85 @@
 # codebase.py
-import argparse
-from .project import Project
-from .openai_api import generate_template
-import logging
-import subprocess
 
-# Configure logging
-logging.basicConfig(
-    filename="codebase.log",
-    level=logging.INFO,
-    format="%(asctime)s:%(levelname)s:%(message)s",
+import typer
+from codebase_craft.dynamic_codebase_templating import (
+    codebase_scanning,
+    template_manager,
+)
+from codebase_craft.dynamic_codebase_templating.template_utils import (
+    print_outline_to_console,
+)
+from codebase_craft.utils import openai_api
+from rich.console import Console
+from rich.logging import RichHandler
+import logging
+from codebase_craft.codebase_setup import (
+    dependency_management,
+    deployment_scripts,
+    environment_setup,
+    infra_as_code,
+    setup_utils,
+)
+from codebase_craft.utils.config import load_config
+
+from codebase_craft.codebase_setup.directory_setup import (
+    create_directory,
+    setup_directory,
 )
 
+# Setup the Rich console
+console = Console()
 
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-logging.getLogger("").addHandler(console)
+# Setup the Rich logger
+logging.basicConfig(
+    level="INFO",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(console=console)],
+)
+
+logger = logging.getLogger("rich")
+
+app = typer.Typer(name="codebase")
 
 
-def default_function(args):
-    print("No command provided. Please use 'create', 'tree', 'setup', or 'template'.")
+@app.command()
+def scan():
+    """
+    Scan a directory and generate an outline of the codebase.
+    """
+    logger.info("Scanning directory...")
+    outline = codebase_scanning.scan_directory()
+    logger.info("Directory scanned. Generating template...")
+    template = openai_api.run_template_generation(outline)
+    logger.info("Template generated. Storing template...")
+    template_manager.store_template(template)
+    console.print("Finished scanning directory and storing template.", style="green")
+
+
+@app.command()
+def setup(
+    template: str,
+    name: str = typer.Option(..., prompt="Please enter a project name"),
+):
+    """
+    Setup a new project from a template.
+    """
+
+    template_manager.reformat_template(logger, template)
+    logger.info(f"Loading template: {template}")
+    template = template_manager.load_template(logger, template)
+
+    logger.info(f"Creating the project codebase directory for {name}")
+    create_directory(name, logger)
+
+    logger.info(f"Setting up the {name}/ directory")
+    setup_directory(template, name, logger)
+
+    logger.info("Setup complete.")
 
 
 def main():
-    logging.info("Script started")
-    # Define the command-line interface
-    parser = argparse.ArgumentParser(prog="codebase")
-    subparsers = parser.add_subparsers()
-
-    # Create the parser for the "create_directories" command
-    parser_create = subparsers.add_parser(
-        "create", help="Create directories for a new project"
-    )
-    parser_create.add_argument("name", help="The name of the new project")
-    parser_create.set_defaults(func=Project.create_directories)
-
-    tree_parser = subparsers.add_parser("tree", help="Display project tree")
-    tree_parser.set_defaults(func=run_print_tree)
-    tree_parser.add_argument(
-        "--yaml", action="store_true", help="Save tree to a YAML file"
-    )
-
-    # Create the parser for the "setup_project" command
-    parser_setup = subparsers.add_parser("setup", help="Set up a new project")
-    parser_setup.set_defaults(func=Project.setup_project)
-
-    # Create the parser for the "generate_template" command
-    parser_template = subparsers.add_parser(
-        "template",
-        help="Generate a generic template of the current directory structure",
-    )
-    parser_template.set_defaults(func=generate_template)
-
-    # Set the default function
-    parser.set_defaults(func=default_function)
-
-    # Parse the arguments and call the appropriate function
-    args = parser.parse_args()
-    args.func(args)
-
-
-def run_print_tree(args):
-    script_args = ["python", "codebase_craft/scripts/print_tree.py"]
-    if args.yaml:
-        script_args.append("--yaml")
-    subprocess.run(script_args, check=True)
+    app()
 
 
 if __name__ == "__main__":
