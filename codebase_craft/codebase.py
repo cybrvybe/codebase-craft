@@ -1,23 +1,11 @@
 # codebase.py
-
 import typer
-from rich.console import Console
-from rich.logging import RichHandler
 import logging
 from codebase_craft.utils.config import load_config
 from codebase_craft.commands import directory_commands, setup_commands
+from codebase_craft.utils.handlers import pretty_print
+from codebase_craft.utils.console import console
 
-
-# Setup the Rich console
-console = Console()
-
-# Setup the Rich logger
-logging.basicConfig(
-    level="INFO",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(console=console)],
-)
 
 logger = logging.getLogger("rich")
 
@@ -29,7 +17,7 @@ def scan():
     """
     Scan a directory and generate an outline of the codebase.
     """
-    directory_commands.scan_command(logger, console)
+    directory_commands.scan_command()
 
 
 @app.command()
@@ -37,7 +25,7 @@ def tree():
     """
     Print the dir tree to the console
     """
-    directory_commands.print_tree_command(logger, console)
+    directory_commands.print_tree_command()
 
 
 @app.command()
@@ -48,6 +36,7 @@ def setup(
     """
     Setup a new project from a template.
     """
+    pretty_print(f"Setting up project: {name} using template: {template}")
     setup_commands.setup_command(logger, console, name, template)
 
 
