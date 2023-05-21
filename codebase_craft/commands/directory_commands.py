@@ -14,12 +14,14 @@ from codebase_craft.utils.handlers import (
     update_progress,
 )
 
+codebase_scanner = codebase_scanning.CodebaseScanner()
+
 
 def scan_command():
     log_info("Scanning directory...")
     task_id = start_progress_task(100, "Scanning directory")
 
-    outline = codebase_scanning.scan_directory()
+    outline = codebase_scanner.scan()
     update_progress(task_id, 50)
 
     log_info("Directory scanned. Generating template...")
