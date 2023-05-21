@@ -2,6 +2,32 @@
 
 CodebaseCraft.ai is an autonomous codebase Command-Line Interface (CLI) tool designed to simplify and automate your codebase management tasks. With this tool, you can easily handle codebase templating, setup, workflow management, autonomous codebase enhancement, and codebase contextualization.
 
+## What I've Learned (so far)
+1. Creating python CLI tools
+2. Extensive logging and terminal ux using Rich and Typer
+3. GPT-4 API integration for generating directory templates from scanned directory structure
+4. Codebase scanning to extract metadata, codebase metrics, and directory structure using python
+5. Codebase setup automation for the following tasks:
+   - Setting up a codebase directory structure
+   - Setting up environment: 
+      - Checking system-level dependencies, like versions of programming languages and package managers, etc
+      - Setting up virtual environment (python)
+   - Installing dependencies using pip, npm, and yarn
+   - Setting up configuration files: 
+      - Setting up linting and formatting
+      - Configuring setup files: setup.py and package.json
+      - Automating PostgreSQL relational and Milvus vector database setups using NexusDb.
+   - Setting Up Version Control
+      - Remote and Local Git Repo Initialization
+      - Initial Commit
+      - Setting up branch structure
+   - Running initial builds
+   - Setting up and running the initial test suite
+   - Setting up CI/CD pipelines
+
+
+   
+
 ## Features
 
 ### MVP Features
