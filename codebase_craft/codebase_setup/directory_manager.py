@@ -43,11 +43,13 @@ def setup_directory(template_data, project_name, logger):
     """
     Set up the directory structure from the JSON file.
     """
-    logger.info(f"Setting up directory structure for C:/Users/alexf/software-projects")
+    logger.info(
+        f"Setting up directory structure for C:/Users/alexf/software-projects")
 
-    creator = DirectoryCreator(logger)
+    creator = DirectoryManager(logger)
 
-    main_dir_path = os.path.join("C:/Users/alexf/software-projects", project_name)
+    main_dir_path = os.path.join(
+        "C:/Users/alexf/software-projects", project_name)
     os.makedirs(main_dir_path, exist_ok=True)
     creator.create_structure(template_data, main_dir_path)
 
