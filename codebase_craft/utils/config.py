@@ -3,7 +3,7 @@ import yaml
 
 def load_config():
     with open(
-        r"C:\Users\alexf\software-projects\codebase-craft\codebase_craft\config\app_config.yaml",
+        r"C:\Users\alexf\software-projects\codebase_craft\codebase_craft\config\app_config.yaml",
         "r",
     ) as f:
         return yaml.safe_load(f)
